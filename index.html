@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">The Wedding</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .font-serif-custom { font-family: 'Playfair Display', serif; }
+    </style>
+    <!-- 👉 POSISI 1: Letakkan SDK Firebase di dalam <head> -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased selection:bg-stone-200">
+
+    <!-- Tombol Musik Melayang -->
+    <button id="musicToggle" onclick="toggleMusic()" class="fixed bottom-6 right-6 z-50 bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg border border-stone-200 text-stone-700 hover:scale-105 transition hidden">
+        <svg id="musicIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+    </button>
+    
+    <audio id="bgMusic" loop>
+        <source id="audioSource" src="" type="audio/mpeg">
+    </audio>
+
+    <!-- Cover / Sampul Depan -->
+    <section id="cover" class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 bg-stone-900 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-black/40 z-0"></div>
+        <div id="coverBg" class="absolute inset-0 bg-cover bg-center z-n10 scale-105 transition-transform duration-1000"></div>
+        
+        <div class="relative z-10 max-w-lg mx-auto space-y-4">
+            <p class="text-xs md:text-sm uppercase tracking-widest text-stone-200">The Wedding Of</p>
+            <h1 id="coverNames" class="font-serif-custom text-5xl md:text-7xl font-bold tracking-wide">Memuat...</h1>
+            <p class="text-xs md:text-sm text-stone-300">Kepada Yth. Bapak/Ibu/Saudara/i</p>
+            
+            <div id="guestNameBox" class="bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl inline-block my-2">
+                <span id="guestName" class="font-semibold text-lg md:text-xl text-white block">Tamu Undangan</span>
+            </div>
+            
+            <p class="text-xs text-stone-300 italic">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk hadir di acara pernikahan kami.</p>
+            
+            <div class="pt-4">
+                <button onclick="openInvitation()" class="bg-white text-stone-900 px-8 py-3 rounded-full font-medium shadow-xl hover:bg-stone-100 transition transform hover:-translate-y-0.5">
+                    Buka Undangan
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="hidden">
+
+        <!-- Section Quotes -->
+        <section class="py-20 px-6 max-w-xl mx-auto text-center space-y-4">
+            <p class="text-xs uppercase tracking-widest text-stone-400">💍</p>
+            <p class="text-stone-600 text-sm md:text-base italic leading-relaxed">
+                "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tentram kepadanya..."
+            </p>
+            <h3 class="font-serif-custom font-bold text-stone-800 text-lg">QS. Ar-Rum: 21</h3>
+        </section>
+
+        <!-- Mempelai Pengantin -->
+        <section class="py-12 px-6 max-w-3xl mx-auto text-center">
+            <h2 class="font-serif-custom text-3xl font-bold mb-10 text-stone-800">Mempelai Bahagia</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <div class="space-y-3">
+                    <div class="w-48 h-48 mx-auto rounded-full overflow-hidden shadow-md border-4 border-white bg-stone-200">
+                        <img id="imgPria" src="" alt="Pria" class="w-full h-full object-cover">
+                    </div>
+                    <h3 id="namaPria" class="font-serif-custom text-2xl font-bold text-stone-800">-</h3>
+                    <p id="ortuPria" class="text-xs text-stone-500">-</p>
+                </div>
+                <div class="space-y-3">
+                    <div class="w-48 h-48 mx-auto rounded-full overflow-hidden shadow-md border-4 border-white bg-stone-200">
+                        <img id="imgWanita" src="" alt="Wanita" class="w-full h-full object-cover">
+                    </div>
+                    <h3 id="namaWanita" class="font-serif-custom text-2xl font-bold text-stone-800">-</h3>
+                    <p id="ortuWanita" class="text-xs text-stone-500">-</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hitung Mundur -->
+        <section class="py-16 px-6 bg-stone-200/50 my-12 text-center">
+            <h2 class="font-serif-custom text-2xl font-bold mb-6 text-stone-800">Menuju Hari Bahagia</h2>
+            <div id="countdown" class="flex justify-center gap-4 max-w-sm mx-auto">
+                <div class="bg-white px-4 py-3 rounded-xl shadow-sm flex-1"><span id="days" class="text-xl font-bold block">00</span><span class="text-[10px] text-stone-500 uppercase">Hari</span></div>
+                <div class="bg-white px-4 py-3 rounded-xl shadow-sm flex-1"><span id="hours" class="text-xl font-bold block">00</span><span class="text-[10px] text-stone-500 uppercase">Jam</span></div>
+                <div class="bg-white px-4 py-3 rounded-xl shadow-sm flex-1"><span id="minutes" class="text-xl font-bold block">00</span><span class="text-[10px] text-stone-500 uppercase">Menit</span></div>
+                <div class="bg-white px-4 py-3 rounded-xl shadow-sm flex-1"><span id="seconds" class="text-xl font-bold block">00</span><span class="text-[10px] text-stone-500 uppercase">Detik</span></div>
+            </div>
+        </section>
+
+        <!-- Detail Acara & Maps -->
+        <section class="py-12 px-6 max-w-2xl mx-auto text-center">
+            <h2 class="font-serif-custom text-3xl font-bold mb-8 text-stone-800">Waktu & Tempat</h2>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 space-y-3">
+                <h3 class="font-serif-custom font-bold text-xl text-stone-800">Akad & Resepsi</h3>
+                <p id="txtTanggal" class="text-xs text-stone-500">-</p>
+                <p id="txtGedung" class="text-xs text-stone-700 font-medium pb-2">-</p>
+                <a id="linkMaps" href="#" target="_blank" class="inline-block bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs px-4 py-2 rounded-lg font-medium transition">Lihat Lokasi di Google Maps</a>
+            </div>
+        </section>
+
+        <!-- Form RSVP -->
+        <section id="rsvp" class="py-16 px-6 bg-stone-100">
+            <div class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-stone-200">
+                <h2 class="font-serif-custom text-2xl font-bold text-center mb-2">RSVP & Ucapan</h2>
+                <p class="text-center text-xs text-stone-500 mb-6">Konfirmasi kehadiran dan sampaikan doa terbaik Anda.</p>
+                
+                <form id="weddingForm" onsubmit="handleSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-stone-700 mb-1">Nama Lengkap</label>
+                        <input type="text" id="nama" required class="w-full px-4 py-2 border border-stone-300 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-700 mb-1">Konfirmasi Kehadiran</label>
+                        <select id="status" class="w-full px-4 py-2 border border-stone-300 rounded-lg text-sm">
+                            <option value="Hadir">Hadir</option>
+                            <option value="Tidak Hadir">Tidak Hadir</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-700 mb-1">Ucapan & Doa</label>
+                        <textarea id="pesan" rows="3" required class="w-full px-4 py-2 border border-stone-300 rounded-lg text-sm" placeholder="Tulis doa untuk kedua mempelai..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-stone-800 text-white py-3 rounded-xl font-medium text-sm hover:bg-stone-700 transition">Kirim Konfirmasi</button>
+                </form>
+                
+                <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 text-green-700 text-xs rounded-xl text-center">
+                    Terima kasih! Konfirmasi dan data Anda berhasil dikirim.
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footerNames" class="py-12 text-center text-xs text-stone-500">
+            <p class="font-serif-custom text-base text-stone-700 mb-1">The Wedding</p>
+            <p>Merupakan suatu kehormatan dan kebahagiaan bagi kami.</p>
+        </footer>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqeKyRZKOPOVTRyoJsnvKLubhY5u8FsoI",
+            authDomain: "undangan-pernikahan-a3d71.firebaseapp.com",
+            databaseURL: "https://undangan-pernikahan-a3d71-default-rtdb.firebaseio.com",
+            projectId: "undangan-pernikahan-a3d71",
+            storageBucket: "undangan-pernikahan-a3d71.firebasestorage.app",
+            messagingSenderId: "1022187520350",
+            appId: "1:1022187520350:web:39d71f403f29ac0ae90fcf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let targetTimestamp = new Date().getTime() + 86400000;
+
+        db.ref('weddingData').on('value', (snapshot) => {
+            const savedData = snapshot.val();
+            if (savedData) {
+                document.getElementById('pageTitle').innerText = `The Wedding of ${savedData.pria} & ${savedData.wanita}`;
+                document.getElementById('coverNames').innerText = `${savedData.pria} & ${savedData.wanita}`;
+                document.getElementById('coverBg').style.backgroundImage = `url('${savedData.fotoCover}')`;
+                
+                document.getElementById('namaPria').innerText = savedData.pria;
+                document.getElementById('ortuPria').innerText = savedData.ortuPria;
+                document.getElementById('imgPria').src = savedData.fotoPria;
+
+                document.getElementById('namaWanita').innerText = savedData.wanita;
+                document.getElementById('ortuWanita').innerText = savedData.ortuWanita;
+                document.getElementById('imgWanita').src = savedData.fotoWanita;
+
+                const eventDate = new Date(savedData.waktuAcara);
+                targetTimestamp = eventDate.getTime();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                document.getElementById('txtTanggal').innerText = eventDate.toLocaleDateString('id-ID', options) + ' WIB';
+                document.getElementById('txtGedung').innerText = savedData.namaGedung;
+                document.getElementById('linkMaps').href = savedData.mapsUrl;
+
+                document.getElementById('audioSource').src = savedData.musikUrl;
+                document.getElementById('bgMusic').load();
+            } else {
+                console.log("Belum ada data di database.");
+            }
+        });
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestParam = urlParams.get('to');
+        if (guestParam) {
+            const decodedName = decodeURIComponent(guestParam);
+            document.getElementById('guestName').innerText = decodedName;
+            setTimeout(() => {
+                const namaInput = document.getElementById('nama');
+                if(namaInput) namaInput.value = decodedName;
+            }, 300);
+        }
+
+        function openInvitation() {
+            document.getElementById('cover').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('musicToggle').classList.remove('hidden');
+            document.getElementById('bgMusic').play().catch(e => console.log("Audio diblokir:", e));
+        }
+
+        let isPlaying = true;
+        function toggleMusic() {
+            const music = document.getElementById('bgMusic');
+            const icon = document.getElementById('musicIcon');
+            if (isPlaying) {
+                music.pause();
+                icon.classList.remove('animate-spin');
+            } else {
+                music.play();
+                icon.classList.add('animate-spin');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetTimestamp - now;
+            if (distance > 0) {
+                document.getElementById("days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
+                document.getElementById("hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById("minutes").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById("seconds").innerText = Math.floor((distance % (1000 * 60)) / 1000);
+            }
+        }, 1000);
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            document.getElementById('weddingForm').reset();
+            document.getElementById('successMessage').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

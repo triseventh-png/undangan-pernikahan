@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard & WhatsApp Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Poppins', sans-serif; }</style>
+    
+    <!-- Tambahkan SDK Firebase di <head> -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-stone-100 p-6 md:p-12 text-stone-800">
+    <div class="max-w-3xl mx-auto space-y-8">
+        
+        <!-- Form Pengaturan Utama -->
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200">
+            <h1 class="text-2xl font-bold mb-1">Dashboard Pengaturan Undangan</h1>
+            <p class="text-xs text-stone-500 mb-6">Atur informasi utama mempelai, waktu, tempat, dan musik latar.</p>
+            
+            <form id="adminForm" class="space-y-5 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                        <h2 class="font-bold text-stone-700">Mempelai Pria</h2>
+                        <div><label class="block text-xs font-medium mb-1">Nama Pria</label><input type="text" id="pria" required class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-xs font-medium mb-1">Orang Tua Pria</label><input type="text" id="ortuPria" placeholder="Putra dari Bpk... & Ibu..." required class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-xs font-medium mb-1">URL Foto Pria</label><input type="url" id="fotoPria" required class="w-full border p-2 rounded-lg"></div>
+                    </div>
+                    <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                        <h2 class="font-bold text-stone-700">Mempelai Wanita</h2>
+                        <div><label class="block text-xs font-medium mb-1">Nama Wanita</label><input type="text" id="wanita" required class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-xs font-medium mb-1">Orang Tua Wanita</label><input type="text" id="ortuWanita" placeholder="Putri dari Bpk... & Ibu..." required class="w-full border p-2 rounded-lg"></div>
+                        <div><label class="block text-xs font-medium mb-1">URL Foto Wanita</label><input type="url" id="fotoWanita" required class="w-full border p-2 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                    <h2 class="font-bold text-stone-700">Acara & Tampilan</h2>
+                    <div><label class="block text-xs font-medium mb-1">URL Foto Cover Utama (Background)</label><input type="url" id="fotoCover" required class="w-full border p-2 rounded-lg"></div>
+                    <div><label class="block text-xs font-medium mb-1">Waktu & Tanggal Acara</label><input type="datetime-local" id="waktuAcara" required class="w-full border p-2 rounded-lg"></div>
+                    <div><label class="block text-xs font-medium mb-1">Nama Gedung / Tempat</label><input type="text" id="namaGedung" required class="w-full border p-2 rounded-lg"></div>
+                    <div><label class="block text-xs font-medium mb-1">Link Google Maps</label><input type="url" id="mapsUrl" required class="w-full border p-2 rounded-lg"></div>
+                    <div><label class="block text-xs font-medium mb-1">URL Musik (.mp3)</label><input type="url" id="musikUrl" required class="w-full border p-2 rounded-lg"></div>
+                </div>
+
+                <button type="submit" class="w-full bg-stone-800 text-white py-3 rounded-xl font-medium hover:bg-stone-700 transition">Simpan Pengaturan Undangan</button>
+            </form>
+        </div>
+
+        <!-- Fitur Generator Pesan WhatsApp -->
+        <div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200 space-y-4">
+            <h2 class="text-xl font-bold">Generator Pesan WhatsApp</h2>
+            <p class="text-xs text-stone-500">Masukkan nama tamu dan link web undangan Anda untuk membuat format pesan otomatis seperti contoh.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium mb-1">Nama Tamu Undangan</label>
+                    <input type="text" id="inputNamaTamu" placeholder="Contoh: Pak Tri dan kekasihnya" class="w-full border p-2.5 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">Link Website Undangan Anda</label>
+                    <input type="url" id="inputLinkWeb" placeholder="https://domainanda.com/index.html" class="w-full border p-2.5 rounded-lg text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium mb-1">Pratinjau Pesan WhatsApp:</label>
+                <textarea id="previewWaMsg" rows="12" readonly class="w-full border bg-stone-50 p-3 rounded-lg text-xs font-mono text-stone-700"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="generateWaMessage()" class="flex-1 bg-stone-200 text-stone-800 py-2.5 rounded-xl font-medium text-xs hover:bg-stone-300 transition">Perbarui Pesan</button>
+                <button onclick="copyWaMessage()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-xs hover:bg-emerald-500 transition">Salin Pesan WhatsApp</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqeKyRZKOPOVTRyoJsnvKLubhY5u8FsoI",
+            authDomain: "undangan-pernikahan-a3d71.firebaseapp.com",
+            projectId: "undangan-pernikahan-a3d71",
+            storageBucket: "undangan-pernikahan-a3d71.firebasestorage.app",
+            messagingSenderId: "1022187520350",
+            appId: "1:1022187520350:web:39d71f403f29ac0ae90fcf",
+            measurementId: "G-LEG14JJZH9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        // Simpan data utama
+        document.getElementById('adminForm').onsubmit = function(e) {
+            e.preventDefault();
+            const data = {
+                pria: document.getElementById('pria').value,
+                wanita: document.getElementById('wanita').value,
+                waktuAcara: document.getElementById('waktuAcara').value,
+                namaGedung: document.getElementById('namaGedung').value,
+                mapsUrl: document.getElementById('mapsUrl').value,
+                fotoCover: document.getElementById('fotoCover').value,
+                musikUrl: document.getElementById('musikUrl').value,
+                ortuPria: document.getElementById('ortuPria').value,
+                ortuWanita: document.getElementById('ortuWanita').value,
+                fotoPria: document.getElementById('fotoPria').value,
+                fotoWanita: document.getElementById('fotoWanita').value
+            };
+
+            db.ref('weddingData').set(data)
+              .then(() => alert('Data berhasil disimpan ke server online!'))
+              .catch((error) => alert('Gagal menyimpan: ' + error.message));
+        };
+
+        // Otomatis isi form saat halaman dimuat jika data sudah ada
+        window.onload = function() {
+            const saved = JSON.parse(localStorage.getItem('weddingData'));
+            if(saved) {
+                document.getElementById('pria').value = saved.pria || '';
+                document.getElementById('wanita').value = saved.wanita || '';
+                document.getElementById('ortuPria').value = saved.ortuPria || '';
+                document.getElementById('ortuWanita').value = saved.ortuWanita || '';
+                document.getElementById('fotoPria').value = saved.fotoPria || '';
+                document.getElementById('fotoWanita').value = saved.fotoWanita || '';
+                document.getElementById('fotoCover').value = saved.fotoCover || '';
+                document.getElementById('waktuAcara').value = saved.waktuAcara || '';
+                document.getElementById('namaGedung').value = saved.namaGedung || '';
+                document.getElementById('mapsUrl').value = saved.mapsUrl || '';
+                document.getElementById('musikUrl').value = saved.musikUrl || '';
+            }
+            generateWaMessage();
+        }
+
+        // Generator Pesan WhatsApp Real-time
+        function generateWaMessage() {
+            const saved = JSON.parse(localStorage.getItem('weddingData')) || { pria: "Joni", wanita: "Meliani", waktuAcara: "2026-07-08T08:00" };
+            const namaTamu = document.getElementById('inputNamaTamu').value || "Bapak/Ibu/Saudara/i";
+            let linkWeb = document.getElementById('inputLinkWeb').value || "https://domainanda.com/index.html";
+            
+            // Format tanggal & waktu dari input datetime-local
+            const dt = new Date(saved.waktuAcara);
+            const tglStr = isNaN(dt) ? "08/07/2026" : dt.toLocaleDateString('id-ID');
+            
+            const finalLink = `${linkWeb}?to=${encodeURIComponent(namaTamu)}`;
+
+            const msg = `Yth. Bapak/Ibu/Saudara/i\n` +
+                        `${namaTamu}\n` +
+                        `Di Tempat\n` +
+                        `------------------\n` +
+                        `Assalamualaikum Wr. Wb.\n` +
+                        `Dengan segala kerendahan hati,\n` +
+                        `kami mengundang Bapak/Ibu/Saudara/i dan teman-teman untuk menghadiri acara,\n` +
+                        `==============\n` +
+                        `The Wedding of ${saved.pria} dan ${saved.wanita}\n` +
+                        `==============\n` +
+                        `❤️ Save The Date ❤️\n` +
+                        `------------------\n` +
+                        `Pada\n` +
+                        `📅 Tanggal : ${tglStr}\n` +
+                        `🕒 Pukul : 08:00 s/d Selesai\n` +
+                        `Tempat\n` +
+                        `🏠 ${saved.namaGedung || 'Lihat pada link undangan dibawah.'}\n` +
+                        `------------------\n` +
+                        `Untuk detail acaranya, bisa kunjungi link berikut. 👇\n\n` +
+                        `${finalLink}\n` +
+                        `(Note: Disarankan Menggunakan Browser Chrome)\n\n` +
+                        `Kami sangat berharap Bapak/Ibu/Saudara/i dan teman-teman dapat menghadiri acara tersebut,\n` +
+                        `------------------\n` +
+                        `Wassalamualaikum Wr. Wb,\n` +
+                        `🙏 Hormat Kami,\n` +
+                        `${saved.pria} & ${saved.wanita}`;
+
+            document.getElementById('previewWaMsg').value = msg;
+        }
+
+        document.getElementById('inputNamaTamu').oninput = generateWaMessage;
+        document.getElementById('inputLinkWeb').oninput = generateWaMessage;
+
+        function copyWaMessage() {
+            const text = document.getElementById('previewWaMsg').value;
+            navigator.clipboard.writeText(text);
+            alert("Pesan WhatsApp berhasil disalin!");
+        }
+    </script>
+</body>
+</html>
